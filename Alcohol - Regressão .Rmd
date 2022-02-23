@@ -1,0 +1,672 @@
+
+---
+title: 
+author: 
+date:
+output: pdf_document
+fontsize: 12pt
+---
+\begin{center}
+\topskip0pt
+\vspace*{\fill}
+\bf \color{black} \huge "Relatório do Projeto 1" - Análise de Regressão \\
+\bf \color{black} \huge Maria Júlia\\
+\vspace*{\fill}
+\end{center}
+
+\newpage
+
+\renewcommand\contentsname{Conteúdo}
+\tableofcontents
+\renewcommand{\listfigurename}{Lista de figuras}
+\listoffigures
+\renewcommand{\listtablename}{Lista de tabelas}
+\listoftables
+
+\newpage
+
+# Introdução
+
+O presente projeto tem como objetivo mostrar os resultados encontrados a partir de uma análise de regressão simples do conjunto de dados ALCOHOL, este conjunto de dados é encontrado no pacote Robustbase do Software RStudio. O conjunto de dados ALCOHOL de (Romanelli et al., 2001) contém 7 variáveis que trazem informações sobre as características físico-químicas de 44 álcoois alifáticos.  
+Descrevendo um pouco mais sobre a análise de regressão, temos que ela é basicamente a utilização de técnicas estatísticas no estudo sobre a relação de duas variáveis ou mais por meio de um modelo equacional. Este modelo, tem como objetivo descrever como se situa a relação entre as variáveis estudadas, com foco na predição, descrição e controle dos dados. No modelo, analisamos as variáveis tentando entender a relação que uma variável preditora (variável aleatória independente), pode ter  de influenciar outra variável, no caso essa outra variável influenciada se torna dependente (denominada como variável resposta).
+
+
+## Um pouco mais sobre o conjunto de dados **ALCOHOL**
+
+Os dados presentes no ALCOHOL descrevem as características físico-químicas de 44 álcoois alifáticos, com o objetivo de prever a solubilidade dos álcoois na água para um maior entendimento do transporte do álcool nos organismos vivos, isso é feito com base em variáveis que descrevem algumas moléculas. 
+
+Essas características físico-químicas de 44 álcoois são descrevidas pelas seguintes variáveis: 
+
+- **SAG** -> Volume molecular limitado pela superfície acessível ao solvente.
+
+- **V** -> Volume molecular.
+
+- **logPC** -> Log(PC); PC = Coeficiente de partição octanol-água (medida de lipofilicidade de um composto, é a razão da concentração do composto, no equilíbrio, após dissolução dele em um sistema com duas fases, essas fases são basicamente dois solventes imiscíveis, a água e o octanol).
+
+- **P** -> Polarizabilidade = Capacidade de distorcer a nuvem eletrônica de uma molécula.
+ 
+- **RM** -> Refratividade molar = quantificação do grau de interação do campo elétrico da radiação com o meio molecular.
+
+- **Massa** -> Massa molecular = Soma das massas atômicas.
+ 
+- **logSolubility** -> ln(solubilidade) = Coeficiente de solubilidade mede a capacidade máxima de dissolução de uma substância em um solvente. No caso essa é a variável resposta.
+
+
+\newpage
+
+# Análise de dados:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#carregando os pacotes
+library(pacman)
+pacman::p_load(tidyverse, rstatix, lmtest, ggpubr, car, corrplot, gridExtra)
+
+#carregando o banco de dados
+data(alcohol, package="robustbase")
+
+#view(alcohol)
+#glimpse(alcohol)#verificando o tipo de variável
+
+```
+
+
+## Matriz de correlação
+
+A matriz de correlação apresenta em forma de matriz a correlação entre todas as variáveis encontradas no conjunto de dados.
+
+```{r fig1, echo=FALSE, message=FALSE, warning=FALSE}
+
+corrplot(cor(alcohol), method = "number")
+
+```
+
+Observando a matriz de correlação calculada, temos que nenhuma variável apresentou uma correlação entre o intervalo -0,3 e 0,3, com isso, nenhuma variável foi eliminada da análise. Outro ponto é que todas variáveis apresentam uma correlação muito forte, mesmo que essa correlação seja negativa quanto olhamos para a relação das variáveis com a variável resposta logSolubility.
+
+
+## Estatíticas descritivas das variáveis
+
+- Abaixo serão calculadas algumas estatísticas sumárias sobre as variáveis de ALCOHOL:
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+summary(alcohol)
+```
+
+
+## Gráficos de disperção entre a variável **logSolubility** e as outras variáveis
+
+```{r fig2, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+ggg1 <- ggplot(alcohol, aes(x = SAG, y = logSolubility)) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e SAG")
+
+
+
+```
+
+```{r fig3, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+ggg2 <- ggplot(alcohol, aes(x = V, y = logSolubility)) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e V")
+
+
+
+```
+
+```{r fig4, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+ggg3 <- ggplot(alcohol, aes(x = logPC, y = logSolubility)) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e LogPC")
+
+
+```
+
+
+```{r fig5, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+ggg4 <- ggplot(alcohol, aes(x = P, y = logSolubility)) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e P")
+
+
+
+```
+
+```{r fig6, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+ggg5 <- ggplot(alcohol, aes(x = RM, y = logSolubility)) +
+  geom_point()  + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e RM")
+
+
+
+```
+
+```{r fig7, echo=FALSE, message=FALSE, warning=FALSE}
+ggg6 <- ggplot(alcohol, aes(x = Mass, y = logSolubility)) +
+  geom_point() +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Correlação linear entre as variáveis LogSolubility e Mass")
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+grid.arrange(ggg1,ggg2, nrow = 2)
+grid.arrange(ggg3,ggg4, nrow = 2)
+grid.arrange(ggg5,ggg6, nrow = 2)
+
+```
+
+- Observando os gráficos de correlação/disperção apresentados acima, pode-se observar uma forte correlação negativa entre as variáveis quando elas são dispostas com a variável resposta logSolubility, o que pode indicar fortemente que quando uma variável aumenta, a outra diminui, pois, elas são inversamente proporcionais. Também é possível a forma com que a distribuição dos dados se aproxima de uma reta, o que é um indício dessa forte correlação.
+
+## Gráficos de boxplot entre a variável **logSolubility** e as outras variáveis
+
+```{r fig14, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+
+g1 <- ggplot(alcohol, aes(x = SAG, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e SAG")
+
+
+```
+
+```{r fig15, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+g2 <- ggplot(alcohol, aes(x = V, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e V")
+
+
+
+
+```
+
+```{r fig16, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+g3 <- ggplot(alcohol, aes(x = logPC, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e LogPC")
+
+
+
+
+```
+
+
+```{r fig17, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+g4 <- ggplot(alcohol, aes(x = P, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e P")
+
+
+
+```
+
+```{r fig18, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+g5 <- ggplot(alcohol, aes(x = RM, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e RM")
+
+
+
+```
+
+```{r fig19, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+
+g6 <- ggplot(alcohol, aes(x = Mass, y = logSolubility)) +
+  geom_boxplot(fill="tomato3") +
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "LogSolubility e Mass")
+
+
+
+```
+
+
+```{r fig20, echo=FALSE, message=FALSE, warning=FALSE}
+grid.arrange(g1,g2,g3, ncol = 3)
+
+grid.arrange(g4,g5,g6, ncol = 3)
+
+```
+
+- Com base nos boxplots apresentados acima, é possível visualizar a presença de outliers, ou seja, observações muito afastadas da granda maioria, o qua pode acabar influenciando no modelo de regressão.
+
+## Regressão linear simples
+
+Fazendo a análise de regressão simples e o teste do coefieciente angular entre a variável resposta logSolubility e as outras variáveis, temos:
+
+### Teste do coeficiente angular por meio do teste F
+
+O  teste do coefieciente angular testa as seguintes hipóteses:
+
+- Hipótese nula - H~0~: O coeficiente algular é igual a zero se Pr(>|t|) ou p-valor > 0,05.
+- Hipótese alternativa - H~1~: O coeficiente angular é diferente de zero se Pr(>|t|) ou p-valor <= 0,05.
+
+Para a variável **SAG**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_SAG <- lm(logSolubility ~ SAG, alcohol)
+
+summary(mod_SAG)
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável SAG exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -0,0438, então a cada uma unidade acrescida da variável SAG, se tem uma diminuição de 0,0438 da variável logSolubility.
+
+Para a variável **V**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_V <- lm(logSolubility ~ V, alcohol)
+
+summary(mod_V)
+
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável V exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -0,02525, então a cada uma unidade acrescida da variável V, se tem uma diminuição de 0,02525 da variável logSolubility.
+
+Para a variável **logPC**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_logPC <- lm(logSolubility ~ logPC, alcohol)
+
+summary(mod_logPC)
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável logPC exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -3,4221, então a cada uma unidade acrescida da variável logPC, se tem uma diminuição de 3,4221 da variável logSolubility.
+
+
+Para a variável **P**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_P <- lm(logSolubility ~ P, alcohol)
+
+summary(mod_P)
+
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável P exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -0,74432, então a cada uma unidade acrescida da variável P, se tem uma diminuição de 0,74432 da variável logSolubility.
+
+Para a variável **RM**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_RM <- lm(logSolubility ~ RM, alcohol)
+
+summary(mod_RM)
+
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável RM exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -0,296499, então a cada uma unidade acrescida da variável RM, se tem uma diminuição de 0,296499 da variável logSolubility.
+
+Para a variável **Mass**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#regressão linear simples
+mod_Mass <- lm(logSolubility ~ Mass, alcohol)
+
+summary(mod_Mass)
+```
+
+Como o Pr(>|t|) encontrado foi menor que 0,05, então rejeitamos a hipótese nula - H~0~ de que o coeficiente angular é zero, e concluímos que a variável Mass exerce alguma influência na variável resposta logSolubility. Interpretando o coeficiente encontrado, temos que como ele é negativo e é de -0,097378, então a cada uma unidade acrescida da variável Mass, se tem uma diminuição de 0,097378 da variável logSolubility.
+
+
+### Estudando gráficamente os resíduos
+
+Para um modelo linear melhor ajustado os resíduos do modelo , ou também conhecidos como erros do modelo, devem seguir uma distribuição normal e ter uma dispersão constante, essa dispersão constate é uma característica chamada homocedasticidade/homogeneidade de variância, quando essa dispersão dos resíduos não é constante, temos uma heterocedasticidade de variância.
+
+- Para o modelo entre a variável logSolubility e a SAG, temos:
+
+```{r fig8, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_SAG)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+- Para o modelo entre a variável logSolubility e a V, temos:
+
+```{r fig9, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_V)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+
+- Para o modelo entre a variável logSolubility e a logPC, temos:
+
+```{r fig10, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_logPC)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+- Para o modelo entre a variável logSolubility e a P, temos:
+
+```{r fig11, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_P)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+- Para o modelo entre a variável logSolubility e a RM, temos:
+
+```{r fig12, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_RM)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+- Para o modelo entre a variável logSolubility e a Mass, temos:
+
+```{r fig13, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+
+plot(mod_Mass)
+```
+
+Estudo do gráfico Residuals vs Fitted
+- Como a linha vermelha não está seguindo uma reta tão na horizontal(ela tem uma certa curavtura irregular), não temos uma relação tão linear entre as duas variáveis, como os resíduos não seguem uma certa constância, temos uma heterocedasticidade de variância.
+
+Estudo do gráfico Normal Q-Q
+- Observando se os resíduos seguem uma distribuição normal.
+- Eixos do gráfico: y = resíduos padronizados; x = resíduos teóricos(resíduos esperados se a distribuição dos resíduos fosse normal).
+-Para que os resíduos seguissem uma distribuição normal, então, os resíduos deveriam estar em cima da linha pontilhada cinza. Nesse caso, como os resíduos não estão totalmente em cima da linha, estão tendo uma certa curvatura ao londo da "linha", inferimos que os resíduos não seguem uma distribuição normal.
+
+Estudo do gráfico Scale-Location
+- Eixos do gráfico = y=raiz quadrada dos resíduos padronizados; x=resíduos previstos.
+- Podemos inferir que há heterocedasticidade de variância, já que os resíduos não apresentam uma dispersão constante , já que a linha vermelha horizontal não tenha uma forma tão reta.
+
+Estudo do gráfico Residual vs Leverage
+- No gráfico é possível notar que existem outliers que estão influenciando um pouco a distribuição dos dados, e alguns pontos de alavancagem(pontos que estão tão distantes que estão influenciando a distribuição do modelo), por conta disso, as linhas vermelhas também estão sendo influenciadas pelos outliers.
+
+
+### Testando por meio do Shapiro teste se os resíduos estudados anteriormente realemnte não seguem uma distribuição normal
+
+O Shapiro teste testa a normalidade dos resíduos por meio das seguintes hipóteses:
+
+- Hipótese nula - H~0~: A distribuição dos resíduos é uma normal se o p-valor > 0,05.
+- Hipótese alternativa - H~1~: A distribuição dos resíduos não é uma normal se o p-valor <= 0,05.
+
+Para a variável **SAG**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+par(mfrow=c(1,1))
+#teste shapiro.test
+shapiro.test(mod_SAG$residuals)
+
+```
+
+- Como o p-valo foi > 0,05, aceitamos a hipótese nula de que os erros seguem uma distribuição normal, mesmo que gráficamente eles não demonstravem ter uma distribuição normal.
+
+
+Para a variável **V**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(mod_V$residuals)
+
+```
+
+- Como o p-valo foi > 0,05, aceitamos a hipótese nula de que os erros seguem uma distribuição normal, mesmo que gráficamente eles não demonstravem ter uma distribuição normal.
+
+
+Para a variável **logPC**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(mod_logPC$residuals)
+
+```
+
+- Como o p-valor foi < 0,05, rejeitamos a hipótese nula e temos como hipótese alternativa que os erros não seguem uma distribuição normal.
+
+
+Para a variável **P**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(mod_P$residuals)
+
+```
+
+- Como o p-valor foi < 0,05, rejeitamos a hipótese nula e temos como hipótese alternativa que os erros não seguem uma distribuição normal.
+
+
+Para a variável **RM**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(mod_RM$residuals)
+
+```
+
+- Como o p-valor foi < 0,05, rejeitamos a hipótese nula e temos como hipótese alternativa que os erros não seguem uma distribuição normal.
+
+
+Para a variável **Mass**
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(mod_Mass$residuals)
+
+```
+
+- Como o p-valor foi < 0,05, rejeitamos a hipótese nula e temos como hipótese alternativa que os erros não seguem uma distribuição normal.
+
+## Gráficos do modelo de regressão linear entre a variável **logSolubility** e as outras variáveis
+
+
+```{r fig22, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+gg1 <- ggplot(alcohol, aes(x = SAG, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=600, hjust=c(1.5)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e SAG")
+
+
+
+```
+
+```{r fig23, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+gg2 <- ggplot(alcohol, aes(x = V, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=600, hjust=c(0.1)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e V")
+
+
+
+```
+
+```{r fig24, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+gg3 <- ggplot(alcohol, aes(x = logPC, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=5.6, hjust=c(1.5)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e LogPC")
+
+
+```
+
+
+```{r fig25, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+gg4 <- ggplot(alcohol, aes(x = P, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=30, hjust=c(1.5)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e P")
+
+
+
+```
+
+```{r fig26, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+gg5 <- ggplot(alcohol, aes(x = RM, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=75, hjust=c(1.5)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e RM")
+
+
+
+```
+
+```{r fig27, echo=FALSE, message=FALSE, warning=FALSE}
+gg6 <- ggplot(alcohol, aes(x = Mass, y = logSolubility)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "tomato4") + 
+  stat_regline_equation(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*plain(\",\")~~")), label.x=240, hjust=c(1.5)) + 
+  theme_minimal() +
+  labs(y = "LogSolubility", title = "Regressão linear entre as variáveis LogSolubility e Mass")
+
+```
+
+
+```{r fig21, echo=FALSE, message=FALSE, warning=FALSE}
+
+grid.arrange(gg1,gg2, nrow = 2)
+grid.arrange(gg3,gg4, nrow = 2)
+grid.arrange(gg5,gg6, nrow = 2)
+
+```
+
+- Analisando os gráficos mostrados acima, é possível notar que em todos os gráficos se tem um modelo de regresão linear com uma relação negativa entre as variáveis, o que influencia na inclinação da reta, e que essa relação é bem forte, pois, os pontos se aproximam bem da reta de regressão. O que mostra que o ajuste ao modelo é bom, mesmo que seja negativo.  
+
+
+\newpage
+
+# Conclusão
+
+Com base na análise de regressão e estatística feita no conjunto de dados alcohol, pode-se inferir que todas as variáveis se dispostas em um modelo linear com a variável resposta logSolubility apresentam uma forte correlação negativa, além dos resíduos do modelo quase sempre não seguem uma distribuição normal mais evidente. O que acaba mostrando que quanto mais as outras variáveis aumentam, mais a variável resposta diminui, pois, em todos os casos o intercepto do modelo também foi negativo.
+
+\newpage
+
+# Referências Bibliográficas
+
+- ROCHA, Davi. Sobre Correlações e visualizações de matrizes de correlação no R. 2018. Disponível em:  https://rstudio-pubs-static.s3.amazonaws.com/437792_df39a5ff0a55491fb71f0f4a0f5cd0bf.html. Acesso em: 29 de setembro 2021.
+
+- XIE, Yihui. ALLAIRE, JJ. GROLEMUNDR, Garrett. R Markdown: o guia definitivo. 2021. Disponível em: https://bookdown.org/yihui/rmarkdown/. Acesso em: 29 de setembro 2021.
+
+- KIM, Bommae. Compreendendo gráficos de diagnóstico para análise de regressão linear. 2015. Disponível em: https://data.library.virginia.edu/diagnostic-plots/. Acesso em: 27 de setembro 2021.
+
+- Teste para normalidade e homocedasticidade. Disponível em: https://biostatistics-uem.github.io/Bio/aula8/teste_normalidade_homocedasticidade.html. Acesso em: 27 de setembro 2021.
+
+- Homocedasticidade na Regressão Linear. Disponível em: https://psicometriaonline.com.br/como-verificar-a-homogeneidade-de-variancia-na-regressao-linear/. Acesso em: 27 de setembro 2021.
+
